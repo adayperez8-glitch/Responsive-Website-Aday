@@ -1,105 +1,85 @@
-/* ================================================================
-   BRITO ABOGADOS — main.js
-   Navbar · Scroll reveal · Form validation
-   ================================================================ */
- 
-/* ── Navbar scroll shadow ── */
+/* ── Navbar scroll ── */
 var nb = document.getElementById('navbar');
 window.addEventListener('scroll', function(){
   nb.classList.toggle('scrolled', window.scrollY > 30);
 });
  
-/* ── Intersection Observer — reveal on scroll ── */
-var revEls = document.querySelectorAll('.reveal,.reveal-left');
-if ('IntersectionObserver' in window) {
-  var obs = new IntersectionObserver(function(entries){
+/* ── Side panel toggle ── */
+var colBar  = document.getElementById('colBar');
+var panel   = document.getElementById('sidePanel');
+var overlay = document.getElementById('panelOverlay');
+var open    = false;
+ 
+function setPanel(state){
+  open = state;
+  colBar.classList.toggle('open', state);
+  panel.classList.toggle('open', state);
+  overlay.classList.toggle('open', state);
+  colBar.setAttribute('aria-label', state ? 'Cerrar menú' : 'Abrir menú');
+}
+ 
+colBar.addEventListener('click', function(){ setPanel(!open); });
+colBar.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); setPanel(!open); } });
+overlay.addEventListener('click', function(){ setPanel(false); });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') setPanel(false); });
+panel.querySelectorAll('a[href]').forEach(function(a){
+  a.addEventListener('click', function(){ setPanel(false); });
+});
+ 
+/* ── Scroll reveal ── */
+if('IntersectionObserver' in window){
+  var io = new IntersectionObserver(function(entries){
     entries.forEach(function(e){
-      if (e.isIntersecting){
-        e.target.classList.add('visible');
-        obs.unobserve(e.target);
-      }
+      if(e.isIntersecting){ e.target.classList.add('visible'); io.unobserve(e.target); }
     });
-  }, { threshold: 0.12 });
-  revEls.forEach(function(el){ obs.observe(el); });
+  }, {threshold:0.12});
+  document.querySelectorAll('.reveal,.reveal-left').forEach(function(el){ io.observe(el); });
 } else {
-  revEls.forEach(function(el){ el.classList.add('visible'); });
+  document.querySelectorAll('.reveal,.reveal-left').forEach(function(el){ el.classList.add('visible'); });
 }
  
 /* ── Form validation ── */
 var FIELDS = [
-  { id:'fn',  err:'efn'  },
-  { id:'fe',  err:'efe'  },
-  { id:'ft',  err:'eft'  },
-  { id:'fca', err:'efca' },
-  { id:'fco', err:'efco' },
-  { id:'fv',  err:'efv'  },
-  { id:'fve', err:'efve' },
-  { id:'fse', err:'efse' }
+  {id:'fn',e:'efn'},{id:'fe',e:'efe'},{id:'ft',e:'eft'},
+  {id:'fca',e:'efca'},{id:'fco',e:'efco'},{id:'fv',e:'efv'},
+  {id:'fve',e:'efve'},{id:'fse',e:'efse'}
 ];
  
+function getEl(id){ return document.getElementById(id); }
+function clrE(f){ getEl(f.id) && getEl(f.id).classList.remove('err'); getEl(f.e) && (getEl(f.e).textContent=''); }
+function setE(f,m){ getEl(f.id) && getEl(f.id).classList.add('err'); getEl(f.e) && (getEl(f.e).textContent=m); }
+ 
 FIELDS.forEach(function(f){
-  var el = document.getElementById(f.id);
-  if (!el) return;
+  var el = getEl(f.id); if(!el) return;
   el.addEventListener('input',  function(){ clrE(f); });
   el.addEventListener('change', function(){ clrE(f); });
 });
  
-function clrE(f){
-  var el = document.getElementById(f.id);
-  var er = document.getElementById(f.err);
-  if (el) el.classList.remove('err');
-  if (er) er.textContent = '';
-}
- 
-function setE(f, m){
-  var el = document.getElementById(f.id);
-  var er = document.getElementById(f.err);
-  if (el) el.classList.add('err');
-  if (er) er.textContent = m;
-}
- 
-function okEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-function okPhone(v){ return /^[\d\s+\-()\u0020]{7,}$/.test(v.trim()); }
- 
-var tf = document.getElementById('theForm');
-if (tf){
+var tf = getEl('theForm');
+if(tf){
   tf.addEventListener('submit', function(e){
     e.preventDefault();
     FIELDS.forEach(clrE);
     var ok = true;
- 
     FIELDS.forEach(function(f){
-      var el = document.getElementById(f.id);
-      if (!el) return;
-      var v = el.value.trim();
-      if (!v){
-        setE(f, 'Recuerde rellenar este campo.');
-        ok = false;
-        return;
-      }
-      if (f.id === 'fe'  && !okEmail(v)){ setE(f, 'Correo electrónico no válido.'); ok = false; }
-      if (f.id === 'ft'  && !okPhone(v)){ setE(f, 'Teléfono no válido.');           ok = false; }
-      if (f.id === 'fv'  && parseInt(v, 10) < 1){ setE(f, 'Indique al menos 1 vivienda.'); ok = false; }
-      if (f.id === 'fve' && parseInt(v, 10) < 1){ setE(f, 'Indique al menos 1 vecino.');   ok = false; }
+      var el = getEl(f.id); if(!el) return;
+      var v  = el.value.trim();
+      if(!v){ setE(f,'Recuerde rellenar este campo.'); ok=false; return; }
+      if(f.id==='fe' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { setE(f,'Correo no válido.'); ok=false; }
+      if(f.id==='ft' && !/^[\d\s+\-()]{7,}$/.test(v))           { setE(f,'Teléfono no válido.'); ok=false; }
+      if((f.id==='fv'||f.id==='fve') && parseInt(v,10)<1)        { setE(f,'Debe ser al menos 1.'); ok=false; }
     });
- 
-    if (!ok){
-      var fe = tf.querySelector('input.err,select.err,textarea.err');
-      if (fe) fe.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if(!ok){
+      var first = tf.querySelector('.err');
+      if(first) first.scrollIntoView({behavior:'smooth',block:'center'});
       return;
     }
- 
-    /* Simulate send */
-    var btn = document.getElementById('subBtn');
-    btn.textContent = 'Enviando...';
-    btn.disabled = true;
-    btn.style.opacity = '.6';
- 
+    var btn = getEl('subBtn');
+    btn.textContent='Enviando…'; btn.disabled=true; btn.style.opacity='.6';
     setTimeout(function(){
-      var fcnt = document.getElementById('fcnt');
-      var fok  = document.getElementById('fok');
-      if (fcnt) fcnt.style.display = 'none';
-      if (fok)  fok.classList.add('show');
+      var fcnt=getEl('fcnt'), fok=getEl('fok');
+      if(fcnt) fcnt.style.display='none';
+      if(fok)  fok.classList.add('show');
     }, 1100);
   });
 }
