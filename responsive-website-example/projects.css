@@ -1,0 +1,48 @@
+.project-hero {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 60px 0;
+}
+
+.project-hero h1 {
+  font-size: 40px;
+  color: black;
+  margin-bottom: 10px;
+}
+
+.project-category {
+  color: grey;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.project-date {
+  color: grey;
+  font-size: 14px;
+  margin-bottom: 30px;
+}
+
+.project-main-img {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+  margin-bottom: 30px;
+}
+
+.project-body-text {
+  color: #6d6d6d;
+  font-size: 18px;
+
+  margin-bottom: 20px;
+}
+
+.other-projects {
+  max-width: 1000px;
+  margin: 60px auto;
+
+}
+
+.other-projects h2 {
+  font-size: 35px;
+  margin-bottom: 40px;
+}
