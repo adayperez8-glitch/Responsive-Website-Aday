@@ -1,35 +1,31 @@
-const userListContainer = document.getElementById("user-list-container");
-const loadMoreBtn = document.getElementById("load-more-btn");
+const contenedor = document.getElementById("user-list-container");
+const boton = document.getElementById("load-more-btn");
 
-let skip = 0;
-const limit = 10;
+async function fetchUsers() {
+  boton.disabled = true;
 
-async function fetchAndRenderUsers() {
-    loadMoreBtn.textContent = "Loading...";
-    loadMoreBtn.disabled = true;
+  try {
+    const respuesta = await fetch("https://dummyjson.com/users");
+    const datos = await respuesta.json();
 
-    try {
-        const response = await fetch(`https://dummyjson.com/users?limit=${limit}&skip=${skip}`);
-        const jsonResponse = await response.json();
-        const users = jsonResponse.users;
+    datos.users.forEach((usuario) => {
+      const tarjeta = document.createElement("div");
+      tarjeta.className = "user-card";
 
-        users.forEach((user) => {
-            const userCard = document.createElement("div");
-            userCard.className = "user-card";
-            userCard.innerHTML = `
-                <img src="${user.image}" alt="${user.firstName}" />
-                <p>${user.firstName} ${user.lastName}</p>
-            `;
-            userListContainer.appendChild(userCard);
-        });
+      tarjeta.innerHTML = `
+        <img src="${usuario.image}" alt="${usuario.firstName}" />
+        <p>${usuario.firstName} ${usuario.lastName}</p>
+      `;
 
-    } catch (error) {
-        console.error("Failed to fetch users:", error);
-    } finally {
-        loadMoreBtn.textContent = "Load More";
-        loadMoreBtn.disabled = false;
-    }
+      contenedor.appendChild(tarjeta);
+    });
+
+  } catch (error) {
+    console.error("Error cargando usuarios:", error);
+  } finally {
+    boton.disabled = false;
+  }
 }
-loadMoreBtn.addEventListener("click", fetchAndRenderUsers);
 
-fetchAndRenderUsers();
+boton.addEventListener("click", fetchUsers);
+fetchUsers();
